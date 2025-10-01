@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project 2</title>
+    <link rel="stylesheet" href="../style.css">
+    <!-- <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/styles/default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script> -->
+    <link rel="stylesheet" href="../prism.css"/>
+</head>
+<body>
+    <a href="../index.html" class="back-btn">&#8592; Back to Welcome</a>
+
+    <main class="content">
+        <h1>Project 2: Fun with Filters and Frequencies!</h1>
+        <h2>Part 1: Fun with Filters</h2>
+        <h3>1.1: Convolutions From Scratch!</h3>
+
+        <div class = "section-grid">
+            <div class = "section">
+                <div class = "explain">
+                    <p>
+                        For this part, I first started with a four for loop implementation that looped 
+                        through the entire padded image array. Then, for each ith, jth element in the 
+                        image array, we loop through the kernel, and get the sum of the element *
+                        the kenel. We then set that as the ith, jth value of our output to get the 
+                        convoluted image.
+                        <br>
+                        This version took very very long, since it had to do single computation over every single pixel of the image.
+                        For a 1500x2000 image, it took roughly 10 seconds to complete one convolution. 
+                    </p>
+                </div>
+
+                <div class="code">
+                    <pre><code class ="language-python">
+def brute_convolution_four(img_array, kernel):
+    h, w = len(img_array), len(img_array[0])
+    kh, kw = len(kernel), len(kernel[0])
+    pad_h, pad_w = kh // 2, kw //2
+    padded = np.pad(img_array, ((pad_h, pad_h), (pad_w, pad_w)), mode="constant")
+
+    output = np.zeros_like(img_array, dtype=np.float64)
+    for i in range(h):
+        for j in range (w):
+            total = 0
+            for n in range(kh):
+                for m in range(kw):
+                    total += padded[i+n, j+m] * kernel[n, m]
+            output[i, j] = total
+                    
+    return output
+                    </code></pre>
+                </div>
+            </div>
+
+            <div class = "section">
+                <div class="explain">
+                    <p>
+                            I then made this faster using just two for loops, looping through the entire
+                            padded image array, but taking a slice of the image array to do  elementwise 
+                            multiplication of that slice with the kernel. After getting that product, I 
+                            summed it to get the final output and then set the ith, jth value as that sum. 
+                            <br>
+                            This version was way faster, cutting down the computation time to around 2 seconds
+                            to complete one convolution. It still wasn't close to the built in convolve2d, however, 
+                            since convolve2d was almost instantaneous. 
+                    </p>
+                </div>
+
+                <div class="code">
+                    <pre><code class ="language-python">
+def brute_convolution_two(img_array, kernel):
+    h, w = len(img_array), len(img_array[0])
+    kh, kw = len(kernel), len(kernel[0])
+    pad_h, pad_w = kh // 2, kw //2
+    padded = np.pad(img_array, ((pad_h, pad_h), (pad_w, pad_w)), mode="constant")
+    output = np.zeros_like(img_array, dtype=np.float64)
+
+    for i in range(h):
+        for j in range(w):
+            area = padded[i: i+kh, j:j+kw]
+            output[i, j] = np.sum((area * kernel))
+return output
+                    </code></pre>
+                </div>
+            </div>
+        </div>
+        
+        <script src="../prism.js"></script>
+
+        <div class = "img-row">
+            <div class="img-col">
+                <img src="./media/part1/original.jpg" alt="original image">
+                <div class="img-desc">Original Image</div>
+            </div>
+            <div class="img-col">
+                <img src="./media/part1/built_in_x.jpg" alt="built in convolution on x">
+                <div class="img-desc">Convolution on x with scipy.convolve2d</div>
+            </div>
+            <div class="img-col">
+                <img src="./media/part1/brute_x.jpg", alt="brute force convolution on x">
+                <div class="img-desc">Brute force convolution on x</div>
+            </div>
+            <div class="img-col">
+                <img src="./media/part1/built_in_y.jpg", alt="built in convolution on y">
+                <div class="img-desc">Built in convolution on y</div>
+            </div>
+            <div class="img-col">
+                <img src="./media/part1/brute_y.jpg", alt="brute force convolution on y">
+                <div class="img-desc">Brute force convoution on y</div>
+            </div>
+            <div class="img-col">
+                <img src="./media/part1/built_in_box_filter.jpg", alt="built in box convolution">
+                <div class="img-desc">Built in box convolution</div>
+            </div>
+            <div class="img-col">
+                <img src="./media/part1/brute_box_filter.jpg", alt="brute force box convolution">
+                <div class="img-desc">Brute force box convolution</div>
+            </div>
+        </div>
+
+        <h3>1.2: Finite Difference Operator</h3>
+            <p>
+                For this part, I used the built in scipy.convolve2d to convolve the cameraman image
+                with the dy and dx filter. Then, I got the gradient by taking the euclidean distance
+                between each value of the convoluted dy and dx images. I then tested different threshholds
+                to figure out the best one to classify the edges. I tried 0.7 but it wasn't able to get some
+                of the thinner ones, so I tried going down to 0.5, and then 0.3, then 0.1. 
+            </p>
+
+            <div class = "img-row">
+                <div class="img-col">
+                    <img src="./media/part1/cameraman.jpg" alt="original cameraman image">
+                    <div class="img-desc">Original cameraman image</div>
+                </div>
+                <div class="img-col">
+                    <img src="./media/part1/cameramangradient.jpg" alt="cameraman gradient image">
+                    <div class="img-desc">Cameraman gradient image</div>
+                </div>
+                <div class="img-col">
+                    <img src="./media/part1/cameraman0.7.jpg" alt="0.7 threshold">
+                    <div class="img-desc">Threshold = 0.7</div>
+                </div>
+                <div class="img-col">
+                    <img src="./media/part1/cameraman0.3.jpg", alt="0.3 threshold">
+                    <div class="img-desc">Threshold = 0.3</div>
+                </div>
+                <div class="img-col">
+                    <img src="./media/part1/cameraman0.1.jpg", alt="0.1 threshold">
+                    <div class="img-desc">Threshold = 0.1</div>
+                </div>
+                <div class="img-col">
+                    <img src="./media/part1/cameraman0.35.jpg", alt="final 0.35 threshold">
+                <div class="img-desc">Final threshold = 0.35</div>
+                </div>
+            </div>
+
+            <p>
+                As I got to 0.3 and 0.1, a lot of noise started showing up. I couldn't get the real
+                edges of the buildings in the back without the grass speckles using this method, so 
+                I decided to go back past 0.3 a little bit to reduce the noise as much as possible and just 
+                get the cameraman.
+            </p>
+        <h3>1.3: Derivative of Gaussian (DoG) Filter</h3>
+        <p>
+            For this part, I first created the 1D Guassian filter G using cv2.getGaussianKernel(). Then
+            I created the 2D kernel by getting the outer product with it's transpose. Using that 2D kernel, 
+            I convolute the original image to smooth out the edges. I tried different inputs for the
+            gaussian function, with 3 not smoothing well enough and 10 blurring the original image too much. 
+            I ended up with 6x1 as my sigma input to getGaussianKernel. After that, I just did the same
+            dx, dy convolution on the smoothed image, and then got the gradient using np.hypot. After trialing 
+            a few thresholds, I ended up with a threshold of 0.12 now. 
+        </p>
+
+        <div class = "img-row">
+            <div class="img-col">
+                <img src="./media/part1/cameramanblur.png" alt="original cameraman image blurred">
+                <div class="img-desc">Cameraman image blurred</div>
+            </div>
+            <div class="img-col">
+                <img src="./media/part1/cameramangaussian.png" alt="cameraman gradient image">
+                <div class="img-desc">Blurred cameraman gradient</div>
+            </div>
+            <div class="img-col">
+                <img src="./media/part1/cameramanbluredge.png" alt="0.7 threshold">
+                <div class="img-desc">Binarized cameraman</div>
+            </div>
+        </div>
+
+        <p>
+            Now we try the single convolution by creating a derivative of gaussian filters. We first take the
+            convolution of the gaussian filter with the dx and dy filters. Then we take the convolution of the
+            cameraman image with these derived gaussian filters. Once we have those, we can get the gradient 
+            using np.hypot, and then filter the same threshhold to get the edge image. 
+        </p>
+        <div class = "img-row">
+            <div class="img-col">
+                <img src="./media/part1/cameramanderivative.png" alt="gradient of DoG filter">
+                <div class="img-desc">Gradient of DoG filter</div>
+            </div>
+            <div class="img-col">
+                <img src="./media/part1/cameramanderivativeedge.png" alt="edge image of DoG filter">
+                <div class="img-desc">Edge image of DoG filter</div>
+            </div>
+            <div class="img-col">
+                <img src="./media/part1/cameramanbluredge.png" alt="0.7 threshold">
+                <div class="img-desc">Original binarized cameraman</div>
+            </div>
+        </div>
+
+        <p>
+            As we can tell, both the DoG filter and the original gaussian blurred edge image look the exact same. 
+        </p>
+
+        <h2>Part 2: Fun with Frequencies!</h2>
+        <h3>2.1: Image "Sharpening"</h3>
+        <p>
+            For this part, I first blurred the orignal grayscale image by convolving with a gaussian kernel, separating
+            out the lower frequencies. Then, I got filtered out the lower frequencies by subtracting the greyscale image 
+            with the blurred grayscale image, getting only the high frequencies (the details). Then, I added the "details" back to 
+            the original image, using alpha = 0.8. Changing alpha changed how thick the lines from the details were and gave "more sharpening"
+            as alpha increased and "less sharpening" as alpha decreased. 
+        </p>
+        <h4>
+            Taj Mahal:
+        </h4>
+        <p>
+            The result was sharper edges on the Taj Mahal itself, with the tree
+            silhouettes and streets emphasized, as we can see in the details image. 
+        </p>
+        <div class = "img-row">
+            <div class="img-col">
+                <img src="./media/part2/2.1/tajmdetails.png" alt="Taj Mahal Details">
+                <div class="img-desc">Taj Mahal details</div>
+            </div>
+        </div>
+        <div class = "img-row">
+            <div class="img-col">
+                <img src="./media/part2/2.1/tajmoriginal.png" alt="Original Taj Mahal">
+                <div class="img-desc">Original Image</div>
+            </div>
+            <div class="img-col">
+                <img src="./media/part2/2.1/tajmsharpened.png" alt="Taj Mahal Sharpened">
+                <div class="img-desc">Sharpened Image</div>
+            </div>
+        </div>
+        <h4>
+            Doe Library:
+        </h4>
+        <p>
+            For doe library, the building edges were also sharpened, and the tree details were enhanced. It
+            almost looked like each branch was visible. 
+        </p>
+        <div class = "img-row">
+            <div class="img-col">
+                <img src="./media/part2/2.1/doedetails.png" alt="Taj Mahal Details">
+                <div class="img-desc">Taj Mahal details</div>
+            </div>
+        </div>
+        <div class = "img-row">
+            <div class="img-col">
+                <img src="./media/part2/2.1/doeoriginal.png" alt="Original Taj Mahal">
+                <div class="img-desc">Original Image</div>
+            </div>
+            <div class="img-col">
+                <img src="./media/part2/2.1/doesharpened.png" alt="Taj Mahal Sharpened">
+                <div class="img-desc">Sharpened Image</div>
+            </div>
+        </div>
+        <h4>
+            Blur and Resharpen:
+        </h4>
+        <p>
+            For this, I first blurred an image with the original alpha = 10 gaussian kernel. Then, I did the 
+            same process to sharpen the image: gaussian blur the grayscale for the low frequencies, subtract 
+            those from the original grayscale to get the high frequencies, and then add it back to the original (blurred) 
+            color image. 
+        </p>
+        <div class = "img-row">
+            <div class="img-col">
+                <img src="./media/part2/2.1/camporiginal.png" alt="Original Taj Mahal">
+                <div class="img-desc">Original Image</div>
+            </div>
+            <div class="img-col">
+                <img src="./media/part2/2.1/campdetails.png" alt="Taj Mahal Sharpened">
+                <div class="img-desc">Details</div>
+            </div>
+        </div>
+        <div class = "img-row">
+            <div class="img-col">
+                <img src="./media/part2/2.1/campblurred.png" alt="Original Taj Mahal">
+                <div class="img-desc">Original Image (blurred)</div>
+            </div>
+            <div class="img-col">
+                <img src="./media/part2/2.1/campsharpened.png" alt="Taj Mahal Sharpened">
+                <div class="img-desc">Sharpened Image</div>
+            </div>
+        </div>
+        <p>
+            The sharpening brought back some of the edges of the campanile, but was not able to unsmooth the edges
+            of the trees or the smaller buildings in the back. A lot of the high frequencies were lost during our 
+            initial blurring, therefore even with the sharpening process, many of the edges could not be fully recovered. 
+        </p>
+        <h3>2.2: Hybrid Images</h3>
+        <p>
+            For this part, I did a high pass and low pass filter to filter out the high frequencies and low frequencies both images. 
+            For the low frequencies, I did a gaussian blur with kernel size = 6 * sigma1, and for the high frequenceies, I did a 
+            gaussian blur with kernel size 6 * sigma2, subtracting the original with the blur to get the high frequencies. I then 
+            added them together with a factor of alpha for the details to control how strong the high frequencies came out in the hybrid. 
+        </p>
+        <h4>
+            Derek + Nutmeg
+        </h4>
+        <p>
+            Sigma1 = 3, Sigma2 = 5, alpha = 2. The edges of Nugmeg wasn't too prominent; I enhanced them so that Nutmeg was visible up close. 
+        </p>
+        <div class = "img-row">
+            <div class="img-col">
+                <img src="./media/part2/2.2/DerekPicture.jpg" alt="Picture of Derek">
+                <div class="img-desc">Derek</div>
+            </div>
+            <div class="img-col">
+                <img src="./media/part2/2.2/nutmeg.jpg" alt="Picture of Nutmeg">
+                <div class="img-desc">Nutmeg</div>
+            </div>
+            <div class="img-col">
+                <img src="./media/part2/2.2/dermeg.jpg" alt="Derek and Nutmeg hybrid">
+                <div class="img-desc">Dermeg</div>
+            </div>
+        </div>
+        <h4>
+            Messi + Ronaldo
+        </h4>
+        <p>
+            Sigma1 = 3, Sigma2 = 5, alpha = 0.7. The edges of ronaldo came out very strong, so I lowered it so that Messi 
+            was still visible from afar. 
+        </p>
+        <div class = "img-row">
+            <div class="img-col">
+                <img src="./media/part2/2.2/messi.png" alt="Picture of Messi">
+                <div class="img-desc">Messi</div>
+            </div>
+            <div class="img-col">
+                <img src="./media/part2/2.2/ronaldo.png" alt="Picture of Ronaldo">
+                <div class="img-desc">Ronaldo</div>
+            </div>
+            <div class="img-col">
+                <img src="./media/part2/2.2/messinaldo.jpg" alt="Messi and Ronaldo hybrid">
+                <div class="img-desc">Messnaldo</div>
+            </div>
+        </div>
+        <p>
+            My favorite hybrid was Messnaldo, so I plotted the log magnitude of the Fourier transform for the 
+            images used to create it. 
+        </p>
+        <div class = "img-row2">
+            <div class="img-col">
+                <img src="./media/part2/2.2/messiFFT.jpg" alt="Picture of Messi">
+                <div class="img-desc">Original Messi FFT</div>
+            </div>
+            <div class="img-col">
+                <img src="./media/part2/2.2/messifilterFFT.jpg" alt="Picture of Ronaldo">
+                <div class="img-desc">Low pass Messifilter FFT </div>
+            </div>
+            <div class="img-col">
+                <img src="./media/part2/2.2/ronaldoFFT.jpg" alt="Messi and Ronaldo hybrid">
+                <div class="img-desc">Original Ronaldo FFT</div>
+            </div>
+            <div class="img-col">
+                <img src="./media/part2/2.2/ronaldofilterFFT.jpg" alt="Messi and Ronaldo hybrid">
+                <div class="img-desc">High pass Ronaldo FFT</div>
+            </div>
+            <div class="img-col">
+                <img src="./media/part2/2.2/messnaldoFFT.jpg" alt="Messi and Ronaldo hybrid">
+                <div class="img-desc">Hybrid FFT</div>
+            </div>
+        </div>
+        <h4>
+            Jenn + Chicken the Cat
+        </h4>
+        <p>
+            Sigma1 = 12, Sigma2 = 14, alpha = 2.5. The original images here were way bigger, so I had to do a bigger gaussian kernel to actually
+            get a usable blur. 
+        </p>
+        <div class = "img-row">
+            <div class="img-col">
+                <img src="./media/part2/2.2/jenn.jpeg" alt="Jenn">
+                <div class="img-desc">Jenn the human</div>
+            </div>
+            <div class="img-col">
+                <img src="./media/part2/2.2/chicken.jpeg" alt="Chicken the Cat">
+                <div class="img-desc">Chicken the Cat</div>
+            </div>
+            <div class="img-col">
+                <img src="./media/part2/2.2/jennken.jpg" alt="Jenn and Chicken">
+                <div class="img-desc">Jennken</div>
+            </div>
+        </div>
+        <h2>Multi-Resolution Blending and the Oraple Journey</h2>
+        <h3>2.3: Gaussian and Laplacian Stacks</h3>
+        <p>
+            To build the Gaussian Stack, I repeatedly blurred the previous level with a noramalized gaussian kernal (6 * sigma) using
+            reflect padding instead of fill padding. I didn't do any downsampling to keep the images the same size as the blur continued.
+            To build the Laplacian stack, I took the differences between consecutive Gaussian levels - each Laplacian level was the current
+            Gaussian level minus the next Gaussian level. As for the last Laplacian level, I just appeneded the last Gaussian level. 
+        </p>
+        <div class = "img-row">
+            <div class="img-col">
+                <img src="./media/part2/2.3/apple.jpeg" alt="apple">
+                <div class="img-desc">Original apple image</div>
+            </div>
+            <div class="img-col">
+                <img src="./media/part2/2.3/orange.jpeg" alt="Orange">
+                <div class="img-desc">Original orange image</div>
+            </div>
+        </div>
+        <p>
+            Apple Laplacian Stack (Levels 0-4)
+        </p>
+        <div class = "img-row2">
+            <div class="img-col">
+                <img src="./media/part2/2.3/apple0.jpg" alt="apple">
+                <div class="img-desc">Level 0</div>
+            </div>
+            <div class="img-col">
+                <img src="./media/part2/2.3/apple1.jpg" alt="apple">
+                <div class="img-desc">Level 1</div>
+            </div>
+            <div class="img-col">
+                <img src="./media/part2/2.3/apple2.jpg" alt="apple">
+                <div class="img-desc">Level 2</div>
+            </div>
+            <div class="img-col">
+                <img src="./media/part2/2.3/apple3.jpg" alt="apple">
+                <div class="img-desc">Level 3</div>
+            </div>
+        </div>
+        <p>
+            Orange Laplacian Stack (Levels 0-4)
+        </p>
+        <div class = "img-row2">
+            <div class="img-col">
+                <img src="./media/part2/2.3/orange0.jpg" alt="orange level 0">
+                <div class="img-desc">Level 0</div>
+            </div>
+            <div class="img-col">
+                <img src="./media/part2/2.3/orange1.jpg" alt="orange level 1">
+                <div class="img-desc">Level 1</div>
+            </div>
+            <div class="img-col">
+                <img src="./media/part2/2.3/orange2.jpg" alt="orange level 2">
+                <div class="img-desc">Level 2</div>
+            </div>
+            <div class="img-col">
+                <img src="./media/part2/2.3/orange3.jpg" alt="orange level3">
+                <div class="img-desc">Level 3</div>
+            </div>
+        </div>
+
+        <h3>2.4: Multiresolution Blending (A.K.A. The Oraple!)</h3>
+        <p>
+            To actually blend images, I built the Laplacian stacks for both images with the same number of levels. Then, I generated
+            a Gaussian stack from the mask input image. After that, I looped though each i, blending both Laplacian
+            levels with the corresponding mask level. To get the final image, I sum over all the blended levels to get the correct pixel values. 
+            For my custom blend, I put a cat face onto an orange, using a circular mask to capture the cat's face. 
+        </p>
+        <div class = "img-row">
+            <div class="img-col">
+                <img src="./media/part2/2.3/apple.jpeg" alt="apple">
+                <div class="img-desc">Original apple image</div>
+            </div>
+            <div class="img-col">
+                <img src="./media/part2/2.3/orange.jpeg" alt="Orange">
+                <div class="img-desc">Original orange image</div>
+            </div>
+            <div class="img-col">
+                <img src="./media/part2/2.4/contributions.png" alt="apple">
+                <div class="img-desc">Laplacian Stack</div>
+            </div>
+        </div>
+        <div class="img-row">
+            <div class="img-col">
+                <img src="./media/part2/2.4/applehalf.jpg" alt="apple">
+                <div class="img-desc">Apple mask</div>
+            </div>
+            <div class="img-col">
+                <img src="./media/part2/2.4/orangehalf.jpg" alt="apple">
+                <div class="img-desc">Orange Mask</div>
+            </div>
+            <div class="img-col">
+                <img src="./media/part2/2.4/blended.jpg" alt="apple">
+                <div class="img-desc">Oraple</div>
+            </div>
+        </div>
+
+        <h4>
+            Campanile x Big Ben
+        </h4>
+        <div class="img-row">
+            <div class="img-col">
+                <img src="./media/part2/2.4/bigben.jpg" alt="apple">
+                <div class="img-desc">Big Ben</div>
+            </div>
+            <div class="img-col">
+                <img src="./media/part2/2.4/campanile5.png" alt="apple">
+                <div class="img-desc">Campanile</div>
+            </div>
+            <div class="img-col">
+                <img src="./media/part2/2.4/bigcampanile.jpg" alt="apple">
+                <div class="img-desc">Big Campanile</div>
+            </div>
+        </div>
+
+        <h4>
+            Chicken the Orange
+        </h4>
+        <div class="img-row">
+            <div class="img-col">
+                <img src="./media/part2/2.4/chicken.jpeg" alt="apple">
+                <div class="img-desc">Chicken the cat!</div>
+            </div>
+            <div class="img-col">
+                <img src="./media/part2/2.4/orange.png" alt="apple">
+                <div class="img-desc">Orange</div>
+            </div>
+            <div class="img-col">
+                <img src="./media/part2/2.4/orangecat.jpg" alt="apple">
+                <div class="img-desc">Orange Cat!</div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

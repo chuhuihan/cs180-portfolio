@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Project 1</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <a href="../index.html" class="back-btn">&#8592; Back to Welcome</a>
+    <h1>
+        Project 1: Images of the Russian Empire: 
+        Colorizing the Prokudin-Gorskii photo collection
+    </h1>
+    <h2>Part 1: Small Images</h2>
+    <p>
+        For the small images (.jpg), I used a regular L2-norm formula to check the differences 
+        between the three different parts of the image and minimize those distances.
+        I fixed a single layer (the blue layer) and then aligned both red and green layers to
+        that layer. For a given window, I looped over the minimum y to maximum y given the 
+        window, then looped over the minimum x to maximum y, getting each combination of 
+        displacements in that given window. Then, for each displacement, I moved the layer to 
+        be aligned and calculated the L2-norm distance. The displacement that gives us minimum 
+        distance is then the best displacement for aligning the layer to the reference layer 
+        (blue). After getting both aligned layers ar and ag, I stack ar, ag, and b together to 
+        create the final aligned colorized image. I also experimented with cropping during the
+        distance checking so that the noise of the borders wouldn't create inaccurate alignments.
+    </p>
+    <div class = "img-row">
+        <div class="img-col">
+            <img src="./media/part1/out_withcropFalsecathedral.jpg" alt="cathedral without crop">
+            <div class="img-desc">Cathedral without crop</div>
+        </div>
+        <div class="img-col">
+            <img src="./media/part1/out_withcropTruecathedral.jpg" alt="cathedral with crop">
+            <div class="img-desc">Cathedral with crop</div>
+        </div>
+        <div class="img-col">
+            <img src="./media/part1/out_withcropTruetobolsk.jpg", alt="tobolsk with crop">
+            <div class="img-desc">Tobolsk with crop</div>
+        </div>
+        <div class="img-col">
+            <img src="./media/part1/out_withcropFalsemonastery.jpg", alt="monastery without crop">
+            <div class="img-desc">Monastery without crop</div>
+        </div>
+        <div class="img-col">
+            <img src="./media/part1/out_withcropTruemonastery.jpg", alt="monastery with crop">
+            <div class="img-desc">Monastery with crop</div>
+        </div>
+    </div>
+
+    <p>
+        There is definately better alignment for the images that calculate distance after cropping
+        versus the images that calculate distance without cropping. 
+    </p>
+
+    <h2>Part 2: Bigger Images</h2>
+
+    <p>
+        For the bigger images, I followed the spec and split the images into an image pyramid,
+        with the original image at array[0], and every level above that at a 1/2 rescale. I then
+        recrusively traversed the pyramid, running the original brute force algorithm to get the best displacement at each level. Since the image
+        is scaled down at each higher level, I had to rescale the displacement by 2 ** i when looking at the
+        next level. Using this new displacement as the center, I run it on the next level with a smaller search radius. Ex. 4 level pyramid, level 0 biggest: start with level 4 search centered around (0, 0), with
+        radius of 30 &rarr; level 3 search centered around (level 4 best displacement) * 2, with radius of 15 &rarr; level 2 search
+        centered around (level 3 best displacement) * 2, with radius 7 &rarr; and so on. I tried using NCC but it gave
+        me similar results, with some images even getting aligned worse. I was also running issues with slight alignment errors but I solved it
+        by also scaling my crops so that each level cropped based on how big the image was at that level, instead of a fixed pixel crop. 
+    </p>
+
+    <div class="img-row">
+        <div class="img-col">
+            <img src="./media/part2/churchv20.1cropped.jpg", alt="placeholder">
+        </div>
+        <div class="img-col">
+            <img src="./media/part2/emirv20.1cropped.jpg", alt="placeholder">
+        </div>
+        <div class="img-col">
+            <img src="./media/part2/harvestersv20.1cropped.jpg", alt="placeholder">
+        </div>
+        <div class="img-col">
+            <img src="./media/part2/iconv20.1cropped.jpg", alt="placeholder">
+        </div>
+            <div class="img-col">
+            <img src="./media/part2/italilv20.1cropped.jpg", alt="placeholder">
+        </div>
+        <div class="img-col">
+            <img src="./media/part2/lastochikinov20.1cropped.jpg", alt="placeholder">
+        </div>
+        <div class="img-col">
+            <img src="./media/part2/luganov20.1cropped.jpg", alt="placeholder">
+        </div>
+        <div class="img-col">
+            <img src="./media/part2/melonsv20.1cropped.jpg", alt="placeholder">
+        </div>
+        <div class="img-col">
+            <img src="./media/part2/self_portraitv20.1cropped.jpg", alt="placeholder">
+        </div>
+        <div class="img-col">
+            <img src="./media/part2/sirenv20.1cropped.jpg", alt="placeholder">
+        </div>
+        <div class="img-col">
+            <img src="./media/part2/three_generationsv20.1cropped.jpg", alt="placeholder">
+        </div>
+    </div>
+
+    <p>
+        The one image I had issues with alignments was emir.tif. I tried a lot of parameter tweaking, aggressive cropping, and some different
+        similarity algorithms, to no avail. It is definately because of what the spec said, this image is in different color channels with 
+        different brightness. I just was not able to think up a similarity algorithm that was able to account for this without messing up my other
+        images. 
+    </p>
+
+    <h3>Calculated Offsets (With Respect to B)</h3>
+    
+    <table>
+        <thead>
+        <tr>
+        <th>File</th>
+        <th>G shift (dy, dx)</th>
+        <th>R shift (dy, dx)</th>
+        </tr>
+        </thead>
+        <tbody>
+            <tr>
+            <td>church.tif</td>
+            <td>(25, 4)</td>
+            <td>(58, -4)</td>
+            </tr>
+            <tr>
+            <td>emir.tif</td>
+            <td>(49, 24)</td>
+            <td>(104, 56)</td>
+            </tr>
+            <tr>
+            <td>harvesters.tif</td>
+            <td>(60, 17)</td>
+            <td>(124, 14)</td>
+            </tr>
+            <tr>
+            <td>icon.tif</td>
+            <td>(41, 17)</td>
+            <td>(89, 23)</td>
+            </tr>
+            <tr>
+            <td>italil.tif</td>
+            <td>(38, 21)</td>
+            <td>(76, 35)</td>
+            </tr>
+            <tr>
+            <td>lastochikino.tif</td>
+            <td>(-3, -2)</td>
+            <td>(75, -9)</td>
+            </tr>
+            <tr>
+            <td>lugano.tif</td>
+            <td>(41, -16)</td>
+            <td>(93, -29)</td>
+            </tr>
+            <tr>
+            <td>melons.tif</td>
+            <td>(82, 11)</td>
+            <td>(178, 13)</td>
+            </tr>
+            <tr>
+            <td>self_portrait.tif</td>
+            <td>(79, 29)</td>
+            <td>(176, 36)</td>
+            </tr>
+            <tr>
+            <td>siren.tif</td>
+            <td>(49, -6)</td>
+            <td>(96, -25)</td>
+            </tr>
+            <tr>
+            <td>three_generations.tif</td>
+            <td>(53, 14)</td>
+            <td>(112, 11)</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Custom Images</h3>
+
+    <div class="img-row">
+        <div class="img-col">
+            <img src="./media/part2/napoleonv1cropped0.1.jpg", alt="napoleon">
+        </div>
+        <div class="img-col">
+            <img src="./media/part2/people_hutv1cropped0.1.jpg", alt="people sitting in front of hut">
+        </div>
+        <div class="img-col">
+            <img src="./media/part2/sunsetv1cropped0.1.jpg", alt="sunset">
+        </div>
+        <div class="img-col">
+            <img src="./media/part2/religious_paintingv1cropped0.1.jpg", alt="religious painting">
+        </div>
+        <div class="img-col">
+            <img src="./media/part2/person_treev1cropped0.1.jpg", alt="person sitting by tree">
+        </div>
+
+        <div class="img-col">
+            <img src="./media/part2/riverv1cropped0.1.jpg", alt="riveer">
+        </div>
+    </div>
+
+
+
+</body>
+</html>
