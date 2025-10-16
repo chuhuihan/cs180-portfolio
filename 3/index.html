@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project 3</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <h1>
+        Project 3: Image Warping and Mosaicing
+    </h1>
+
+    <h2>
+        A.1: Shoot the Pictures
+    </h2>
+
+
+
+    <div class = "img-row">
+        <div class="img-col">
+            <img src="./media/a1/jennleft.jpeg" alt="left image">
+        </div>
+        <div class="img-col">
+            <img src="./media/a1/jennmiddle.jpeg" alt="middle image">
+        </div>
+        <div class="img-col">
+            <img src="./media/a1/jennright.jpeg" alt="right image">
+        </div>
+    </div>
+
+    <div class = "img-row">
+        <div class="img-col">
+            <img src="./media/a1/laptop1.jpeg" alt="left image">
+        </div>
+        <div class="img-col">
+            <img src="./media/a1/laptop2.jpeg" alt="middle image">
+        </div>
+    </div>
+
+    <h2>
+        A.2: Recover Homographies
+    </h2>
+
+    <p>
+        In this part, I implemented computeH to find the projective 
+        transformation (homography) between two sets of corresponding 
+        points. I built a system of equations using the point 
+        correspondences and solved for the homography matrix H 
+        that satisfies p′ = Hp (or Ah = b), and then scaled it with W to get the homogeneous coordinates. 
+        I tested my results against OpenCV’s cv2.findHomography() to see how close
+        my H was. It turned out to be pretty close!
+    </p>
+
+    <div class = "img-row">
+        <div class="img-col">
+            <img src="./media/a2/laptopcorres.jpg" alt="left image">
+        </div>
+    </div>
+
+    <div class = "img-row">
+        <div class="img-col">
+            <img src="./media/a2/homography.jpg" alt="left image">
+        </div>
+        <div class="img-col">
+            <img src="./media/a2/systemeq.jpg" alt="middle image">
+        </div>
+    </div>
+
+
+    <h2>
+        A.3: Warp the Images
+    </h2>
+
+    <p>
+        Using the computed homography, we implemented warp_onto_ref 
+        with two modes (nearest neighbor) and (bilinear) from scratch to perform inverse warping.
+        For each pixel in the output image, we mapped it back to the 
+        source image using H^-1, then sampled its color by rounding to
+        nearest pixel (nearest neighbor), or interpolating from the
+        four surrounding pixels (bilinear). This allows us to get our image
+        in terms of our reference image's perspective. 
+    </p>
+
+    <div class = "img-row">
+        <div class="img-col">
+            <img src="./media/a3/laptopwarp.png" alt="left image">
+        </div>
+    </div>
+
+    <div class="img-row">
+        <div class="img-col">
+            <img src="./media/a3/roomwarp.png" alt="middle image">
+        </div>
+    </div>
+    
+
+    <h2>
+        A.4 Blend the images into a Mosaic
+    </h2>
+
+    <p>
+        Finally, I created a panoramic mosaic by aligning multiple 
+        images into a single canvas. I computed homographies from 
+        each image to a common reference frame, determined the 
+        overall bounding box, and placed all images onto a shared 
+        canvas using our warping functions. I created alpha masks to 
+        try to blend overlapping regions smoothly, but wasn't able to
+        get it to work before the part 1 deadline. The final result is a visually seamless
+        panorama showing all images correctly aligned, albeit a little bit
+        blurry. 
+    </p>
+
+    <div class = "img-row">
+        <div class="img-col">
+            <img src="./media/a1/jennleft.jpeg" alt="left image">
+        </div>
+        <div class="img-col">
+            <img src="./media/a1/jennmiddle.jpeg" alt="middle image">
+        </div>
+        <div class="img-col">
+            <img src="./media/a1/jennright.jpeg" alt="right image">
+        </div>
+        <div class="img-col">
+            <img src="./media/a4/jennmosaic.png" alt="right image">
+        </div>
+    </div>
+
+    <div class = "img-row">
+        <div class="img-col">
+            <img src="./media/a4/room1.jpeg" alt="left image">
+        </div>
+        <div class="img-col">
+            <img src="./media/a4/room2.jpeg" alt="middle image">
+        </div>
+        <div class="img-col">
+            <img src="./media/a4/roommosaic.png" alt="right image">
+        </div>
+    </div>
+
+    <h2>
+        Side Notes:
+    </h2>
+
+    <p>
+        Many of these pictures were done in a hurry, kind of like a 
+        proof of concept that my functions worked for the part 1 deadlone. 
+        I hope to redo this part and use better images within the next few
+        days to hopefully get better looking results, but I hope this is  
+        enough for full credit for part 1 as of now. Thank you!
+    </p>
+</body>
+</html>
